@@ -19,23 +19,34 @@ Frontend do PromoVendas — sistema de gestão de estoque e vendas para negócio
 ## ⚙️ Como rodar localmente
 
 ### Pré-requisitos
+
 - Node.js 18+
 - promo-vendas-api rodando (https://github.com/guilherme-corsino/promo-vendas-api)
 
 ### Passo a passo
 
+1. Clone o repositório
+
 ```bash
-# clone o repositório
 git clone https://github.com/guilherme-corsino/promo-vendas-web.git
 cd promo-vendas-web
+```
 
-# instale as dependências
+2. Instale as dependências
+
+```bash
 npm install
+```
 
-# configure as variáveis de ambiente
+3. Configure as variáveis de ambiente
+
+```bash
 cp .env.local.example .env.local
+```
 
-# rode o projeto
+4. Rode o projeto
+
+```bash
 npm run dev
 ```
 
@@ -43,21 +54,23 @@ Acesse em: http://localhost:3001
 
 ## 📁 Estrutura
 
+```
 promo-vendas-web/
-├── src/
-│ ├── app/
-│ │ ├── login/
-│ │ │ └── page.tsx
-│ │ ├── dashboard/
-│ │ │ └── page.tsx
-│ │ └── layout.tsx
-│ ├── context/
-│ │ └── AuthContext.tsx
-│ ├── lib/
-│ │ └── api.ts
-│ └── types/
-├── .env.local.example
-└── README.md
+  src/
+    app/
+      login/
+        page.tsx
+      dashboard/
+        page.tsx
+      layout.tsx
+    context/
+      AuthContext.tsx
+    lib/
+      api.ts
+    types/
+  .env.local.example
+  README.md
+```
 
 ## 🔗 Projeto relacionado
 
