@@ -27,27 +27,27 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-                <h1 className="text-2xl font-bold mb-6 text-center">PromoVendas</h1>
+                <h1 className="text-2xl font-bold mb-6 text-center text-gray-900">PromoVendas</h1>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1">Email</label>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 border rounded-md"
+                            className="w-full px-3 py-2 border rounded-md text-gray-900"
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">Senha</label>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">Senha</label>
                         <input
                             type="password"
                             value={senha}
                             onChange={(e) => setSenha(e.target.value)}
-                            className="w-full px-3 py-2 border rounded-md"
+                            className="w-full px-3 py-2 border rounded-md text-gray-900"
                             required
                         />
                     </div>

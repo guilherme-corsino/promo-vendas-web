@@ -42,6 +42,12 @@ export default function DashboardPage() {
         }
     }
 
+    // 1. Ordena: EM_ESTOQUE primeiro, depois VENDIDO
+    const produtosOrdenados = [...produtos].sort((a, b) => {
+        if (a.status === b.status) return 0
+        return a.status === 'EM_ESTOQUE' ? -1 : 1
+    })
+
     return (
         <div className="min-h-screen bg-gray-100 p-8 text-gray-900">
             <div className="max-w-4xl mx-auto">
@@ -65,8 +71,10 @@ export default function DashboardPage() {
                             <p className="text-2xl font-bold text-gray-900">
                                 {resumo.resumo.produtosEmEstoque}
                             </p>
-                            <p className="text-xs text-gray-400">
-                                R$ {resumo.financeiro.totalInvestidoEstoque} investido
+                            {/* 4. Label mais claro */}
+                            <p className="text-xs text-gray-400">Capital em estoque</p>
+                            <p className="text-xs text-gray-600 font-medium">
+                                R$ {resumo.financeiro.totalInvestidoEstoque}
                             </p>
                         </div>
 
@@ -81,7 +89,7 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="bg-white p-4 rounded-lg shadow-md">
-                            <p className="text-xs text-gray-500">Investido (vendidos)</p>
+                            <p className="text-xs text-gray-500">Custo dos vendidos</p>
                             <p className="text-2xl font-bold text-gray-900">
                                 R$ {resumo.financeiro.totalInvestidoVendidos}
                             </p>
@@ -115,23 +123,29 @@ export default function DashboardPage() {
                     )}
 
                     <div className="space-y-3">
-                        {produtos.map((produto) => {
+                        {produtosOrdenados.map((produto) => {
                             const compra = Number(produto.precoCompra)
                             const venda = Number(produto.precoVenda)
                             const lucro = venda - compra
                             const margem = compra > 0 ? ((lucro / compra) * 100).toFixed(0) : '0'
+                            const vendido = produto.status === 'VENDIDO'
 
-                            let diasParaVender: number | null = null
-                            if (produto.status === 'VENDIDO' && produto.vendidoEm) {
-                                const criado = new Date(produto.createdAt).getTime()
-                                const vendido = new Date(produto.vendidoEm).getTime()
-                                diasParaVender = Math.round((vendido - criado) / (1000 * 60 * 60 * 24))
-                            }
+                            // 3. Dias em estoque (calculado para ambos os status)
+                            const inicio = new Date(produto.createdAt).getTime()
+                            const fim = vendido && produto.vendidoEm
+                                ? new Date(produto.vendidoEm).getTime()
+                                : Date.now()
+                            const diasEmEstoque = Math.round((fim - inicio) / (1000 * 60 * 60 * 24))
+
+                            let corDias = 'text-green-600'
+                            if (diasEmEstoque > 20) corDias = 'text-red-600'
+                            else if (diasEmEstoque > 7) corDias = 'text-yellow-600'
 
                             return (
                                 <div
                                     key={produto.id}
-                                    className="border rounded-md p-4 flex justify-between items-center"
+                                    className={`border rounded-md p-4 flex justify-between items-center ${vendido ? 'bg-gray-50 opacity-70' : 'bg-white'
+                                        }`}
                                 >
                                     <div>
                                         <p className="font-medium text-gray-900">{produto.nome}</p>
@@ -140,12 +154,23 @@ export default function DashboardPage() {
                                             Comprado por R$ {produto.precoCompra} em{' '}
                                             {new Date(produto.createdAt).toLocaleDateString('pt-BR')}
                                         </p>
-                                        {produto.status === 'VENDIDO' && produto.vendidoEm && (
+                                        {vendido ? (
                                             <p className="text-xs text-gray-400">
-                                                Vendido em {new Date(produto.vendidoEm).toLocaleDateString('pt-BR')}
-                                                {diasParaVender !== null && (
-                                                    <> · {diasParaVender === 0 ? 'no mesmo dia' : `${diasParaVender} dia(s) em estoque`}</>
-                                                )}
+                                                Vendido em{' '}
+                                                {produto.vendidoEm &&
+                                                    new Date(produto.vendidoEm).toLocaleDateString('pt-BR')}
+                                                {' · '}
+                                                <span className={corDias}>
+                                                    {diasEmEstoque === 0
+                                                        ? 'no mesmo dia'
+                                                        : `${diasEmEstoque} dia(s) em estoque`}
+                                                </span>
+                                            </p>
+                                        ) : (
+                                            <p className={`text-xs font-medium ${corDias}`}>
+                                                {diasEmEstoque === 0
+                                                    ? 'cadastrado hoje'
+                                                    : `${diasEmEstoque} dia(s) em estoque`}
                                             </p>
                                         )}
                                     </div>
@@ -155,13 +180,14 @@ export default function DashboardPage() {
                                             <p className="text-xs text-green-600 font-medium">
                                                 +R$ {lucro.toFixed(2)} ({margem}%)
                                             </p>
+                                            {/* 2. Badge mais discreto quando vendido */}
                                             <span
-                                                className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${produto.status === 'VENDIDO'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-blue-100 text-blue-700'
+                                                className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${vendido
+                                                    ? 'bg-gray-200 text-gray-500'
+                                                    : 'bg-blue-100 text-blue-700'
                                                     }`}
                                             >
-                                                {produto.status === 'VENDIDO' ? 'Vendido' : 'Em estoque'}
+                                                {vendido ? 'Vendido' : 'Em estoque'}
                                             </span>
                                         </div>
 
@@ -172,7 +198,7 @@ export default function DashboardPage() {
                                             Editar
                                         </button>
 
-                                        {produto.status === 'EM_ESTOQUE' && (
+                                        {!vendido && (
                                             <button
                                                 onClick={() => marcarComoVendido(produto.id)}
                                                 className="text-sm bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700"
