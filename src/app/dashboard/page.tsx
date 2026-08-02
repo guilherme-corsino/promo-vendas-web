@@ -4,34 +4,39 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { apiFetch } from '@/lib/api'
-import { Produto } from '@/types/produto'
+import { Produto, DashboardResumo } from '@/types/produto'
 
 export default function DashboardPage() {
     const { usuario, logout } = useAuth()
     const [produtos, setProdutos] = useState<Produto[]>([])
+    const [resumo, setResumo] = useState<DashboardResumo | null>(null)
     const [carregando, setCarregando] = useState(true)
     const [erro, setErro] = useState('')
     const router = useRouter()
 
-    async function carregarProdutos() {
+    async function carregarDados() {
         try {
-            const data = await apiFetch('/produtos')
-            setProdutos(data)
+            const [produtosData, resumoData] = await Promise.all([
+                apiFetch('/produtos'),
+                apiFetch('/produtos/dashboard/resumo'),
+            ])
+            setProdutos(produtosData)
+            setResumo(resumoData)
         } catch (err: any) {
-            setErro(err.message || 'Erro ao carregar produtos')
+            setErro(err.message || 'Erro ao carregar dados')
         } finally {
             setCarregando(false)
         }
     }
 
     useEffect(() => {
-        carregarProdutos()
+        carregarDados()
     }, [])
 
     async function marcarComoVendido(id: number) {
         try {
             await apiFetch(`/produtos/${id}/vender`, { method: 'PATCH' })
-            carregarProdutos()
+            carregarDados()
         } catch (err: any) {
             setErro(err.message || 'Erro ao marcar como vendido')
         }
@@ -52,6 +57,44 @@ export default function DashboardPage() {
                         </button>
                     </div>
                 </div>
+
+                {resumo && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white p-4 rounded-lg shadow-md">
+                            <p className="text-xs text-gray-500">Em estoque</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                                {resumo.resumo.produtosEmEstoque}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                                R$ {resumo.financeiro.totalInvestidoEstoque} investido
+                            </p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg shadow-md">
+                            <p className="text-xs text-gray-500">Vendidos</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                                {resumo.resumo.produtosVendidos}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                                R$ {resumo.financeiro.totalVendido} total
+                            </p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg shadow-md">
+                            <p className="text-xs text-gray-500">Investido (vendidos)</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                                R$ {resumo.financeiro.totalInvestidoVendidos}
+                            </p>
+                        </div>
+
+                        <div className="bg-green-600 p-4 rounded-lg shadow-md">
+                            <p className="text-xs text-green-100">Lucro total</p>
+                            <p className="text-2xl font-bold text-white">
+                                R$ {resumo.financeiro.lucroTotal}
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 <div className="bg-white p-6 rounded-lg shadow-md">
                     <div className="flex justify-between items-center mb-4">
@@ -114,8 +157,8 @@ export default function DashboardPage() {
                                             </p>
                                             <span
                                                 className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${produto.status === 'VENDIDO'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-blue-100 text-blue-700'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-blue-100 text-blue-700'
                                                     }`}
                                             >
                                                 {produto.status === 'VENDIDO' ? 'Vendido' : 'Em estoque'}
